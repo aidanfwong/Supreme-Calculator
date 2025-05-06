@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Supreme Calculator</title>
+</head>
+<body>
+  <h1>How much will you really spend on supreme</h1>
+  <label>Cart Total:<input type="number" id="usdPrice"></label>
+  <button onclick="calculate()">Calculate</button>
+  <p>Final Real Pirce:<span id="finalPrice"></span></p>
+
+  <script>
+    async function calculate() {
+      const usd = Number(document.getElementById('usdPrice').value)
+      let shipping = 20
+      const dutyRate = 0.15
+
+      if (usd > 250) {
+        shipping = 0
+      }
+
+      const duty = usd * dutyRate
+      const totalUsd = usd + shipping + duty
+
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD')
+        const data = await res.json()
+        const conversionRate = data.rates.CAD
+
+        const finalCad = totalUsd * conversionRate
+        document.getElementById('finalPrice').textContent = finalCad.toFixed(2)
+      } catch (err) {
+        document.getElementById('finalPrice').textContent = 'Error fetching rate'
+      }
+    }
+  </script>
+</body>
+</html>
