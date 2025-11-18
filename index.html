@@ -2,38 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Supreme Calculator</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Supreme Calculator</h1>
-  <label>Cart Total:<input type="number" id="usdPrice"></label>
-  <button onclick="calculate()">Calculate</button>
-  <p>Final Real Price:<span id="finalPrice"></span></p>
+  <div class="hero">Supreme Calculator</div>
+  <main class="wrapper">
+    <section class="card">
+      <header class="card__header">
+        <h1 class="card__title">Know the real checkout total</h1>
+        <p class="muted">Crunch the drop in USD, see shipping, duty, and the latest CAD conversion before you cop.</p>
+      </header>
 
-  <script>
-    async function calculate() {
-      const usd = Number(document.getElementById('usdPrice').value)
-      let shipping = 20
-      const dutyRate = 0.15
+      <section class="card__body">
+        <form id="calcForm" novalidate>
+          <label for="usdPrice">
+            Item prices (USD, comma separated)
+            <input type="text" id="usdPrice" name="usdPrice" placeholder="e.g. 158, 48, 12">
+          </label>
+          <p class="hint">We’ll add up every price you enter. Shipping is <strong>$20 USD</strong> for orders under $250 USD and
+ free above that. Duty is estimated at <strong>15%</strong> of the subtotal.</p>
 
-      if (usd > 250) {
-        shipping = 0
-      }
+          <div class="actions">
+            <button class="btn-primary" type="submit">Calculate</button>
+            <button class="btn-secondary" type="button" id="resetButton">Reset</button>
+          </div>
+        </form>
 
-      const duty = usd * dutyRate
-      const totalUsd = usd + shipping + duty
+        <div class="status" id="status" aria-live="polite"></div>
 
-      try {
-        const res = await fetch('https://open.er-api.com/v6/latest/USD')
-        const data = await res.json()
-        const conversionRate = data.rates.CAD
+        <div class="results" id="results" hidden>
+          <p class="results__total" id="finalCad">$0.00 CAD</p>
+          <ul class="results__breakdown">
+            <li id="usdSummary"></li>
+            <li id="shippingSummary"></li>
+            <li id="dutySummary"></li>
+            <li id="rateSummary"></li>
+          </ul>
+        </div>
+      </section>
+    </section>
+  </main>
 
-        const finalCad = totalUsd * conversionRate
-        document.getElementById('finalPrice').textContent = finalCad.toFixed(2)
-      } catch (err) {
-        document.getElementById('finalPrice').textContent = 'Error fetching rate'
-      }
-    }
-  </script>
+  <script src="app.js" defer></script>
 </body>
 </html>
