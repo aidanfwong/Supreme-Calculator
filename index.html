@@ -4,7 +4,209 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Supreme Calculator</title>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --supreme-red: #e11b22;
+      --ink: #111;
+      --ink-soft: #555;
+      --surface: #fff;
+      --surface-muted: #f6f6f6;
+      --border: #e5e5e5;
+      --success: #0f9d58;
+      --error: #d93025;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background: var(--surface-muted);
+      color: var(--ink);
+    }
+
+    .hero {
+      background: var(--supreme-red);
+      color: #fff;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      font-size: 1.1rem;
+    }
+
+    .wrapper {
+      max-width: 720px;
+      margin: 28px auto 40px;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .card__header {
+      padding: 20px 22px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card__title {
+      margin: 0 0 6px;
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .muted {
+      color: var(--ink-soft);
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .card__body {
+      padding: 18px 22px 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    input[type="text"] {
+      background: var(--surface-muted);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--supreme-red);
+      box-shadow: 0 0 0 3px rgba(225, 27, 34, 0.14);
+      background: #fff;
+    }
+
+    .hint {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+      line-height: 1.5;
+      background: var(--surface-muted);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px dashed var(--border);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+
+    button:focus-visible {
+      outline: 3px solid rgba(225, 27, 34, 0.35);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--supreme-red);
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(225, 27, 34, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.03);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #111;
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      filter: brightness(1.08);
+    }
+
+    .status {
+      min-height: 22px;
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+    }
+
+    .status--error {
+      color: var(--error);
+    }
+
+    .status--success {
+      color: var(--success);
+    }
+
+    .results {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      background: var(--surface-muted);
+      display: grid;
+      gap: 10px;
+    }
+
+    .results__total {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .results__breakdown {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+    }
+
+    .results__breakdown li {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+    }
+  </style>
 </head>
 <body>
   <div class="hero">Supreme Calculator</div>
@@ -21,8 +223,7 @@
             Item prices (USD, comma separated)
             <input type="text" id="usdPrice" name="usdPrice" placeholder="e.g. 158, 48, 12">
           </label>
-          <p class="hint">We’ll add up every price you enter. Shipping is <strong>$20 USD</strong> for orders under $250 USD and
- free above that. Duty is estimated at <strong>15%</strong> of the subtotal.</p>
+          <p class="hint">We’ll add up every price you enter. Shipping is <strong>$20 USD</strong> for orders under $250 USD and free above that. Duty is estimated at <strong>15%</strong> of the subtotal.</p>
 
           <div class="actions">
             <button class="btn-primary" type="submit">Calculate</button>
@@ -45,6 +246,108 @@
     </section>
   </main>
 
-  <script src="app.js" defer></script>
+  <script>
+    const usdInput = document.getElementById('usdPrice');
+    const form = document.getElementById('calcForm');
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const finalCadEl = document.getElementById('finalCad');
+    const usdSummary = document.getElementById('usdSummary');
+    const shippingSummary = document.getElementById('shippingSummary');
+    const dutySummary = document.getElementById('dutySummary');
+    const rateSummary = document.getElementById('rateSummary');
+    const resetButton = document.getElementById('resetButton');
+
+    const DUTY_RATE = 0.15;
+    const SHIPPING_COST = 20;
+    const FREE_SHIPPING_THRESHOLD = 250;
+
+    function formatCurrency(value, currency = 'USD') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
+    }
+
+    function setStatus(message, variant = '') {
+      statusEl.textContent = message;
+      statusEl.className = `status ${variant ? `status--${variant}` : ''}`;
+    }
+
+    function toggleResults(visible) {
+      resultsEl.hidden = !visible;
+    }
+
+    async function fetchConversionRate() {
+      const response = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (!response.ok) {
+        throw new Error('Unable to fetch conversion rate');
+      }
+
+      const data = await response.json();
+      if (!data?.rates?.CAD) {
+        throw new Error('CAD rate unavailable');
+      }
+
+      return data.rates.CAD;
+    }
+
+    function parseUsdInput(rawValue) {
+      const entries = rawValue
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => Number(item));
+
+      if (entries.length === 0 || entries.some((value) => !Number.isFinite(value) || value <= 0)) {
+        return null;
+      }
+
+      return entries.reduce((sum, value) => sum + value, 0);
+    }
+
+    async function handleCalculation(event) {
+      event.preventDefault();
+      const usd = parseUsdInput(usdInput.value);
+
+      if (!Number.isFinite(usd) || usd <= 0) {
+        setStatus('Enter item prices separated by commas (numbers only).', 'error');
+        toggleResults(false);
+        return;
+      }
+
+      setStatus('Fetching the latest USD → CAD rate…');
+      toggleResults(false);
+
+      try {
+        const conversionRate = await fetchConversionRate();
+        const shipping = usd > FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+        const duty = usd * DUTY_RATE;
+        const totalUsd = usd + shipping + duty;
+        const totalCad = totalUsd * conversionRate;
+
+        finalCadEl.textContent = `${formatCurrency(totalCad, 'CAD')} CAD`;
+        usdSummary.textContent = `Subtotal from items: ${formatCurrency(usd)}`;
+        shippingSummary.textContent = shipping === 0
+          ? 'Shipping: Free'
+          : `Shipping: ${formatCurrency(shipping)}`;
+        dutySummary.textContent = `Duty (15%): ${formatCurrency(duty)}`;
+        rateSummary.textContent = `USD → CAD rate: ${conversionRate.toFixed(4)}`;
+
+        toggleResults(true);
+        setStatus('Calculation updated with live rates.', 'success');
+      } catch (error) {
+        console.error(error);
+        setStatus('Could not update rates right now. Please try again.', 'error');
+      }
+    }
+
+    function resetForm() {
+      form.reset();
+      usdInput.focus();
+      toggleResults(false);
+      setStatus('');
+    }
+
+    form.addEventListener('submit', handleCalculation);
+    resetButton.addEventListener('click', resetForm);
+  </script>
 </body>
 </html>
