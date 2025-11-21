@@ -1,10 +1,12 @@
 const PROXY_PREFIX = 'https://r.jina.ai/http://';
 const SEASON_PATH = 'fall-winter2025';
 const DROPLIST_BASE = `https://www.supremecommunity.com/season/${SEASON_PATH}`;
+const DROPLIST_DEFAULT_SLUG = '2025-11-20';
+const DROPLIST_DEFAULT_URL = `${DROPLIST_BASE}/droplist/${DROPLIST_DEFAULT_SLUG}/`;
 
 const DROPLIST_INDEX_SOURCES = [
-  `${DROPLIST_BASE}/droplists/`,
-  `${PROXY_PREFIX}www.supremecommunity.com/season/${SEASON_PATH}/droplists/`,
+  `${DROPLIST_BASE}/droplist/`,
+  `${PROXY_PREFIX}www.supremecommunity.com/season/${SEASON_PATH}/droplist/`,
 ];
 
 const IMAGE_HOST = 'https://www.supremecommunity.com';
@@ -160,24 +162,10 @@ async function resolveCategory(sources) {
 }
 
 async function fetchLatestDroplistUrl() {
-  const errors = [];
-
-  for (const source of DROPLIST_INDEX_SOURCES) {
-    try {
-      const html = await fetchText(source);
-      const links = parseDroplistLinks(html);
-      if (links.length) {
-        return { url: links[0], source };
-      }
-      errors.push(new Error('No droplist links found on index'));
-    } catch (error) {
-      errors.push(error);
-    }
-  }
-
-  const aggregate = new Error('Unable to locate droplist link');
-  aggregate.details = errors;
-  throw aggregate;
+  return {
+    url: DROPLIST_DEFAULT_URL,
+    source: DROPLIST_DEFAULT_URL,
+  };
 }
 
 async function fetchDroplistItems(url) {

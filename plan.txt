@@ -1,0 +1,14 @@
+    wrapp -> page catalog-page -> catalog-holder -> catalog-inner.catalog-inner.racks-active -> catalog-list
+
+
+    in each, take data-name, data-usdprice 
+    run data-usdpice through the function
+    print on a nother page name new shipped price
+
+
+    issue: prices only posted mon-ish. dat-usdprice doesnt exist until then
+
+    for name in data-name:
+        if data-usdprice:
+            data.append(data-name, convert(data-usdprice))
+        
