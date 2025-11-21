@@ -199,3 +199,128 @@ button:focus-visible {
   border-radius: 10px;
   background: #fff;
 }
+
+.droplist__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.droplist__body {
+  padding-bottom: 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.droplist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.droplist-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.droplist-card__image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+
+.droplist-card__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.droplist-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.pill {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--surface-muted);
+  color: var(--ink);
+}
+
+.pill--upcoming {
+  background: rgba(225, 27, 34, 0.15);
+  color: var(--supreme-red);
+}
+
+.droplist-card__pricing {
+  display: grid;
+  gap: 4px;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.droplist-card__pricing strong {
+  color: var(--ink);
+}
+
+.droplist-summary {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.droplist-summary__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.droplist-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.droplist-status {
+  min-height: 22px;
+}
+
+.availability {
+  font-weight: 700;
+}
+
+.availability--soldout {
+  color: var(--error);
+}
+
+.availability--available {
+  color: var(--success);
+}
