@@ -1,14 +1,3 @@
-const PROXY_PREFIX = 'https://r.jina.ai/http://';
-const SEASON_PATH = 'fall-winter2025';
-const DROPLIST_BASE = `https://www.supremecommunity.com/season/${SEASON_PATH}`;
-const DROPLIST_DEFAULT_SLUG = '2025-11-20';
-const DROPLIST_DEFAULT_URL = `${DROPLIST_BASE}/droplist/${DROPLIST_DEFAULT_SLUG}/`;
-
-const DROPLIST_INDEX_SOURCES = [
-  `${DROPLIST_BASE}/droplist/`,
-  `${PROXY_PREFIX}www.supremecommunity.com/season/${SEASON_PATH}/droplist/`,
-];
-
 const IMAGE_HOST = 'https://www.supremecommunity.com';
 
 function normalizeImageUrl(src) {
@@ -105,8 +94,7 @@ function getNextThursday(startDate = new Date()) {
   return date;
 }
 
-function buildDroplistUrl(date = new Date()) {
-  const dropDate = getNextThursday(date);
+function buildDroplistUrlForDate(dropDate) {
   const season = getSeasonPath(dropDate);
   const dateSlug = formatDateSlug(dropDate);
   const base = 'https://www.supremecommunity.com';
@@ -115,6 +103,14 @@ function buildDroplistUrl(date = new Date()) {
     date: dropDate,
     season,
   };
+}
+
+function getCandidateDropDates(startDate = new Date()) {
+  const nextThursday = getNextThursday(startDate);
+  const previousThursday = new Date(nextThursday);
+  previousThursday.setDate(previousThursday.getDate() - 7);
+
+  return [nextThursday, previousThursday];
 }
 
 async function fetchText(url) {
@@ -135,24 +131,35 @@ async function fetchText(url) {
 }
 
 export async function fetchSupremeCommunityDroplists(date = new Date()) {
-  const target = buildDroplistUrl(date);
-  // Use a single, cache-friendly request while avoiding CORS issues by
-  // routing through the lightweight jina mirror. This still fetches the
-  // exact droplist page path without additional endpoint hits.
-  const proxiedUrl = `https://r.jina.ai/${target.url}`;
-  const html = await fetchText(proxiedUrl);
-  const items = parseHtmlDroplist(html).map((item) => ({ ...item, category: 'upcoming' }));
+  const candidateDates = getCandidateDropDates(date);
+  const errors = [];
 
-  if (!items.length) {
-    throw new Error(`Droplist data unavailable at ${target.url}`);
+  for (const dropDate of candidateDates) {
+    const target = buildDroplistUrlForDate(dropDate);
+    try {
+      // Use a single, cache-friendly request while avoiding CORS issues by
+      // routing through the lightweight jina mirror. This still fetches the
+      // exact droplist page path without additional endpoint hits.
+      const proxiedUrl = `https://r.jina.ai/${target.url}`;
+      const html = await fetchText(proxiedUrl);
+      const items = parseHtmlDroplist(html).map((item) => ({ ...item, category: 'upcoming' }));
+
+      if (!items.length) {
+        throw new Error(`Droplist data unavailable at ${target.url}`);
+      }
+
+      return {
+        items,
+        sources: {
+          droplist: target.url,
+        },
+        date: target.date,
+        season: target.season,
+      };
+    } catch (error) {
+      errors.push(`${target.url} (${error.message})`);
+    }
   }
 
-  return {
-    items,
-    sources: {
-      droplist: target.url,
-    },
-    date: target.date,
-    season: target.season,
-  };
+  throw new Error(`Droplist fetch failed. Attempts: ${errors.join('; ')}`);
 }
