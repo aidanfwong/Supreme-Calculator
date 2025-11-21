@@ -98,32 +98,38 @@ function parseHtmlDroplist(html) {
   return items;
 }
 
-function parseDroplistLinks(html) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const anchors = Array.from(doc.querySelectorAll('a[href*="/droplist/"]'));
-  const links = anchors
-    .map((anchor) => normalizeLink(anchor.getAttribute('href')))
-    .filter((href) => href.includes(`/season/${SEASON_PATH}/droplist/`));
-
-  return Array.from(new Set(links));
+function formatDateSlug(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
-async function fetchJsonMaybe(url) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
-  }
-  const contentType = response.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) {
-    return response.json();
-  }
-  const text = await response.text();
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new Error('Response was not JSON');
-  }
+function getSeasonPath(date) {
+  const month = date.getMonth();
+  const year = date.getFullYear();
+  const isSpringSummer = month >= 1 && month <= 7; // Feb–Aug
+  return `${isSpringSummer ? 'spring-summer' : 'fall-winter'}${year}`;
+}
+
+function getNextThursday(startDate = new Date()) {
+  const date = new Date(startDate);
+  const day = date.getDay();
+  const distance = (4 - day + 7) % 7; // 4 = Thursday
+  date.setDate(date.getDate() + distance);
+  return date;
+}
+
+function buildDroplistUrl(date = new Date()) {
+  const dropDate = getNextThursday(date);
+  const season = getSeasonPath(dropDate);
+  const dateSlug = formatDateSlug(dropDate);
+  const base = 'https://www.supremecommunity.com';
+  return {
+    url: `${base}/season/${season}/droplist/${dateSlug}/`,
+    date: dropDate,
+    season,
+  };
 }
 
 async function fetchText(url) {
@@ -134,68 +140,21 @@ async function fetchText(url) {
   return response.text();
 }
 
-async function resolveCategory(sources) {
-  const errors = [];
-
-  for (const source of sources) {
-    try {
-      if (source.endsWith('.json')) {
-        const jsonPayload = await fetchJsonMaybe(source);
-        const items = parseJsonPayload(jsonPayload);
-        if (items.length) {
-          return { items, source };
-        }
-      }
-
-      const html = await fetchText(source);
-      const items = parseHtmlDroplist(html);
-      if (items.length) {
-        return { items, source };
-      }
-      errors.push(new Error('No items detected in response'));
-    } catch (error) {
-      errors.push(error);
-    }
-  }
-
-  return { items: [], errors };
-}
-
-async function fetchLatestDroplistUrl() {
-  return {
-    url: DROPLIST_DEFAULT_URL,
-    source: DROPLIST_DEFAULT_URL,
-  };
-}
-
-async function fetchDroplistItems(url) {
-  const cleanUrl = url.endsWith('/') ? url : `${url}/`;
-  const detailSources = [
-    cleanUrl,
-    `${cleanUrl}json`,
-    `${PROXY_PREFIX}${cleanUrl.replace(/^https?:\/\//, '')}`,
-    `${PROXY_PREFIX}${cleanUrl.replace(/^https?:\/\//, '')}json`,
-  ];
-
-  const result = await resolveCategory(detailSources);
-  return { ...result, source: result.source || url };
-}
-
-export async function fetchSupremeCommunityDroplists() {
-  const latest = await fetchLatestDroplistUrl();
-  const droplist = await fetchDroplistItems(latest.url);
-
-  const items = droplist.items.map((item) => ({ ...item, category: 'upcoming' }));
+export async function fetchSupremeCommunityDroplists(date = new Date()) {
+  const target = buildDroplistUrl(date);
+  const html = await fetchText(target.url);
+  const items = parseHtmlDroplist(html).map((item) => ({ ...item, category: 'upcoming' }));
 
   if (!items.length) {
-    throw new Error('Droplist data unavailable');
+    throw new Error(`Droplist data unavailable at ${target.url}`);
   }
 
   return {
     items,
     sources: {
-      index: latest.source,
-      droplist: droplist.source,
+      droplist: target.url,
     },
+    date: target.date,
+    season: target.season,
   };
 }
