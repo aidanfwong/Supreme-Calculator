@@ -1,3 +1,12 @@
+const PROXY_PREFIX = 'https://r.jina.ai/http://';
+const SEASON_PATH = 'fall-winter2025';
+const DROPLIST_BASE = `https://www.supremecommunity.com/season/${SEASON_PATH}`;
+
+const DROPLIST_INDEX_SOURCES = [
+  `${DROPLIST_BASE}/droplists/`,
+  `${PROXY_PREFIX}www.supremecommunity.com/season/${SEASON_PATH}/droplists/`,
+];
+
 const IMAGE_HOST = 'https://www.supremecommunity.com';
 
 function normalizeImageUrl(src) {
@@ -24,6 +33,14 @@ function findImage(element) {
   return normalizeImageUrl(source || '');
 }
 
+function normalizeLink(href) {
+  if (!href) return '';
+  if (href.startsWith('http')) return href;
+  if (href.startsWith('//')) return `https:${href}`;
+  if (href.startsWith('/')) return `${IMAGE_HOST}${href}`;
+  return `${DROPLIST_BASE}/${href.replace(/^\//, '')}`;
+}
+
 function parsePrice(rawText) {
   if (!rawText) return null;
   const clean = rawText.replace(/[,\s]/g, '');
@@ -31,6 +48,19 @@ function parsePrice(rawText) {
   if (!match) return null;
   const value = Number(match[1]);
   return Number.isFinite(value) ? value : null;
+}
+
+function parseJsonPayload(json) {
+  if (!json) return [];
+  const products = json.products || json.items || [];
+  return products
+    .map((item) => ({
+      name: item.name || item.title,
+      priceUsd: Number(item.price?.usd ?? item.price) || parsePrice(item.price_text || ''),
+      image: normalizeImageUrl(item.image || item.img),
+      availability: item.sold_out === false || item.available === true ? 'Available' : (item.sold_out ? 'Sold out' : ''),
+    }))
+    .filter((entry) => entry.name && Number.isFinite(entry.priceUsd));
 }
 
 function parseHtmlDroplist(html) {
@@ -48,14 +78,8 @@ function parseHtmlDroplist(html) {
 
   nodes.forEach((node) => {
     const name = textFromSelectors(node, ['[itemprop="name"]', '.name', '.card__title', '.catalog-item__title', 'h3', 'h4']);
-    const priceText = textFromSelectors(node, [
-      '[data-price]',
-      '.price',
-      '.label-price',
-      '.catalog-item__price',
-      '.card__price',
-      '.sc-price',
-    ]);
+    const priceText = textFromSelectors(node, ['[data-price]', '.price', '.label-price', '.catalog-item__price', '.card__price', '.sc-price']);
+    const availabilityText = textFromSelectors(node, ['.sold_out', '.label', '.badge', '.status', '.availability']);
     const priceUsd = parsePrice(priceText);
     const image = findImage(node);
 
@@ -64,7 +88,7 @@ function parseHtmlDroplist(html) {
         name,
         priceUsd,
         image,
-        availability: '',
+        availability: availabilityText || 'Unknown',
       });
     }
   });
