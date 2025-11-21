@@ -35,14 +35,6 @@ function findImage(element) {
   return normalizeImageUrl(source || '');
 }
 
-function normalizeLink(href) {
-  if (!href) return '';
-  if (href.startsWith('http')) return href;
-  if (href.startsWith('//')) return `https:${href}`;
-  if (href.startsWith('/')) return `${IMAGE_HOST}${href}`;
-  return `${DROPLIST_BASE}/${href.replace(/^\//, '')}`;
-}
-
 function parsePrice(rawText) {
   if (!rawText) return null;
   const clean = rawText.replace(/[,\s]/g, '');
@@ -50,19 +42,6 @@ function parsePrice(rawText) {
   if (!match) return null;
   const value = Number(match[1]);
   return Number.isFinite(value) ? value : null;
-}
-
-function parseJsonPayload(json) {
-  if (!json) return [];
-  const products = json.products || json.items || [];
-  return products
-    .map((item) => ({
-      name: item.name || item.title,
-      priceUsd: Number(item.price?.usd ?? item.price) || parsePrice(item.price_text || ''),
-      image: normalizeImageUrl(item.image || item.img),
-      availability: item.sold_out === false || item.available === true ? 'Available' : (item.sold_out ? 'Sold out' : ''),
-    }))
-    .filter((entry) => entry.name && Number.isFinite(entry.priceUsd));
 }
 
 function parseHtmlDroplist(html) {
@@ -80,8 +59,14 @@ function parseHtmlDroplist(html) {
 
   nodes.forEach((node) => {
     const name = textFromSelectors(node, ['[itemprop="name"]', '.name', '.card__title', '.catalog-item__title', 'h3', 'h4']);
-    const priceText = textFromSelectors(node, ['[data-price]', '.price', '.label-price', '.catalog-item__price', '.card__price', '.sc-price']);
-    const availabilityText = textFromSelectors(node, ['.sold_out', '.label', '.badge', '.status', '.availability']);
+    const priceText = textFromSelectors(node, [
+      '[data-price]',
+      '.price',
+      '.label-price',
+      '.catalog-item__price',
+      '.card__price',
+      '.sc-price',
+    ]);
     const priceUsd = parsePrice(priceText);
     const image = findImage(node);
 
@@ -90,7 +75,7 @@ function parseHtmlDroplist(html) {
         name,
         priceUsd,
         image,
-        availability: availabilityText || 'Unknown',
+        availability: '',
       });
     }
   });
@@ -133,16 +118,29 @@ function buildDroplistUrl(date = new Date()) {
 }
 
 async function fetchText(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Cache-Control': 'no-cache',
+    },
+    mode: 'cors',
+  });
+
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
   }
+
   return response.text();
 }
 
 export async function fetchSupremeCommunityDroplists(date = new Date()) {
   const target = buildDroplistUrl(date);
-  const html = await fetchText(target.url);
+  // Use a single, cache-friendly request while avoiding CORS issues by
+  // routing through the lightweight jina mirror. This still fetches the
+  // exact droplist page path without additional endpoint hits.
+  const proxiedUrl = `https://r.jina.ai/${target.url}`;
+  const html = await fetchText(proxiedUrl);
   const items = parseHtmlDroplist(html).map((item) => ({ ...item, category: 'upcoming' }));
 
   if (!items.length) {
