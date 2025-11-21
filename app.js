@@ -29,6 +29,15 @@ function setStatus(target, message, variant = '') {
   target.className = `status ${variant ? `status--${variant}` : ''}`;
 }
 
+function formatDropDate(date) {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+}
+
 function toggleResults(visible) {
   resultsEl.hidden = !visible;
 }
@@ -196,7 +205,11 @@ async function loadDroplist() {
     }
 
     renderDroplist(droplist.items, conversionRate);
-    setStatus(droplistStatus, 'Droplist updated from SupremeCommunity.', 'success');
+    setStatus(
+      droplistStatus,
+      `Droplist for ${formatDropDate(droplist.date)} (${droplist.season}) loaded. Source: ${droplist.sources.droplist}`,
+      'success',
+    );
   } catch (error) {
     console.error(error);
     droplistGrid.innerHTML = '';
@@ -204,7 +217,7 @@ async function loadDroplist() {
       <p class="droplist-summary__title">Cart totals</p>
       <div>Droplist unavailable. Please try refreshing.</div>
     `;
-    setStatus(droplistStatus, 'Could not load droplist data right now.', 'error');
+    setStatus(droplistStatus, `Could not load droplist data right now. ${error.message}`, 'error');
   } finally {
     refreshDroplistButton.disabled = false;
   }
